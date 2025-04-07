@@ -39,10 +39,12 @@ typedef struct {
     char **tags;
     int num_tags;
     char *content;
+    void *prev_node;
+    bool is_unique_tag;
 } CONTENT;
 
 typedef struct {
-    CONTENT **content_list; // Consecutive list of content with all own tags
+    CONTENT *content_list; // Linked-list of content with all own tags
     int  num_contents;
     char *buffer;
     size_t buffer_size;

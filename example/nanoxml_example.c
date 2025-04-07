@@ -30,6 +30,20 @@
 
 int main()
 {
-    DOM full_DOM;
-    nanoxml_load_file("..\\..\\example\\test.html", &full_DOM);
+    DOM dom;
+    nanoxml_load_file("..\\..\\example\\test.html", &dom);
+
+    CONTENT *c = dom.content_list;
+
+    while (c){
+
+        printf("TAGS: ");
+        for(int i=0; i<c->num_tags; i++) printf("[%s] ", c->tags[i]);
+        if(c->is_unique_tag)  printf("\n UNIQUE TAG: %s\n", c->content);
+        else                  printf("\n CONTENT: %s\n", c->content);
+
+        c = (CONTENT *)c->prev_node;
+    }
+
+    nanoxml_free_content(&dom);
 }

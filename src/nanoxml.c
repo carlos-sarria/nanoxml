@@ -56,15 +56,37 @@ static inline bool IS_UNIQUE(char *s)
 
     if(s[strlen(s)-1] == '/') return true;
 
+    if(s[0]=='!') return true; // HTML comment
+
+    sscanf(s, "%[^ ]", &trimmed); /* Only until space. Ignore payload. */
+
     while(unique_tags[tag]) {
-        sscanf(s, "%[^ ]", &trimmed); /* Only until space. Ignore payload. */
-        if (strcmp(unique_tags[tag],s)==0) return true;
+        if (strcmp(unique_tags[tag], trimmed)==0) return true;
         tag++;
     }
 
     return false;
 }
 
+static inline void TAG_PUSH(char **stack, char *str, int *size)
+{
+    if(*size<MAX_TAGS-1) stack[*size]=str;
+    (*size)++;
+}
+
+static inline void TAG_POP(char **stack, char *str, int *size)
+{
+    int pos = 0;
+    char trimmed[128];
+
+    sscanf(str, "%[^ ]", &trimmed); /* Only until space. Ignore payload. */
+
+    while(stack[pos] && strcmp(trimmed,stack[pos])) pos++; // Find first match
+    if(pos>*size) return; // not found
+    while(stack[pos]) stack[pos-1]=stack[pos++]; // Move pointers one step up
+
+    (*size)--;
+}
 
 /*****************************************************************************/
 /* nanoxml_allocate_buffer                                                   */
@@ -81,6 +103,38 @@ e_error nanoxml_allocate_buffer(size_t len, DOM *full_DOM)
 
     return SUCCESS;
 }
+
+/*****************************************************************************/
+/* nanoxml_create_content                                                    */
+/*****************************************************************************/
+e_error nanoxml_create_content(DOM *dom, char *str, char **tag_stack, int  stack_size, bool is_unique_tag)
+{
+    CONTENT *content = (CONTENT *)malloc(sizeof(CONTENT));
+    content->tags = (char **)malloc(sizeof(char *)*stack_size);
+    memcpy(content->tags, tag_stack, sizeof(char *)*stack_size);
+    content->num_tags = stack_size;
+    content->content = str;
+    content->is_unique_tag = is_unique_tag;
+
+    content->prev_node = (void *)dom->content_list;
+    dom->content_list = content;
+    dom->num_contents++;
+}
+
+/*****************************************************************************/
+/* nanoxml_free_content                                                      */
+/*****************************************************************************/
+e_error nanoxml_free_content(DOM *dom)
+{
+    CONTENT *content = dom->content_list;
+
+    while (content){
+        CONTENT *temp = (CONTENT *)content->prev_node;
+        if(content->tags) free(content->tags);
+        if(content) free(content);
+        content = temp;
+    }
+}
 /*****************************************************************************/
 /* nanoxml_process                                                        */
 /*****************************************************************************/
@@ -88,24 +142,33 @@ e_error nanoxml_process(DOM *dom)
 {
     char *pos = dom->buffer;
     int count = 0;
+    char *tag_stack[MAX_TAGS];
+    int  stack_size = 0;
+
+    dom->content_list = NULL;
+    dom->num_contents = 0;
+
+    memset(tag_stack, 0, sizeof(char*)*MAX_TAGS);
 
     while ((pos-dom->buffer) < dom->buffer_size) {
 
-            pos = strchr(pos, 0x00)+1;
+        pos = strchr(pos, 0x00)+1;
 
-            if(pos[0]=='/') {
-                printf("/TAG: %s\n", pos);
-            }
-            else {
-                if(IS_UNIQUE(pos))  printf("UNQ: %s\n", pos);
-                else                printf("TAG: %s\n", pos);
-            }
-
-            pos = strchr(pos, 0x00)+1;
-            if(!IS_EMPTY(pos)) printf("CONTENT: %s\n", pos);
-
-            count++;
+        if(pos[0]=='/') {
+            TAG_POP(tag_stack, pos+1, &stack_size);
         }
+        else {
+            if(!IS_UNIQUE(pos))  TAG_PUSH(tag_stack, pos, &stack_size);
+            else nanoxml_create_content(dom, pos, tag_stack,stack_size, true);
+        }
+
+        pos = strchr(pos, 0x00)+1;
+        if(!IS_EMPTY(pos)) {
+            nanoxml_create_content(dom, pos, tag_stack,stack_size, false);
+        }
+
+        count++;
+    }
 
     return SUCCESS;
 }
