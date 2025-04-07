@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "http://www.w3.org/TR/REC-html40/strict.dtd">
+<html><head>
+
+<style type="text/css">
+p, li { font-size:13px; line-height: 18px; list-style-type:none; font-family:'Arial';}
+a { font-size: 13px; line-height:18px; color:#1a8bb7; text-decoration:none; font-family:'Arial';}
+</style>
+
+</head><h1 name=#Top>Quick start <b>guide</b> to Studio</h1>
+
+<p> Studio is a fully-featured IDE for Windows and Linux which enables developers to debug a CPU and a  GPU together in the same session. It has several powerful features including the ability to insert a breakpoint and step through programs executing on the GPU, such as Vulkan and OpenGL ES shaders and OpenCL kernels. This allows a developer to debug a GPU in the same way CPUs have been debugged for decades. Studio is a very flexible IDE, allowing for much finer granularity in GPU debugging and optimisation while also giving developers direct access to the  USC processing and data.</p>
+
+<p>Studio provides an end-to-end solution for development, debugging and deployment of mobile graphics applications, specifically for Android and Linux, with other operating systems, like QNX, also supported. It is also based on the popular, lightweight, and cross-platform IDE, Qt Creator, so provides all of the standard functionality of modern IDE with support for third-party plug-ins to enhance the IDE.</p>
+
+<unique tag />
+<br><br>
+<a href=ref02>Creating or importing a project: CMake</a><br>
+<a href=ref03>What is a Kit?</a><br>
+<a href=ref04>Example: Creating a kit for Android</a><br>
+<a href=ref05>How to build and deploy for desktop and mobile</a><br>
+<a href=ref06>How to debug the GPU</a><br>
+<a href=ref07>How to debug an external application.</a><br>
+
+<h2 name=#ref02>Creating or importing a project: CMake</h2>
+
+<p>Studio uses CMake as its main project management structure, meaning any project which is already using CMake can be imported directly into Studio. Developers are also able to add custom build and deployment steps as required.</p>
+<p>Studio provides a set of project templates that can be used as a starting point. These templates contain all of the necessary CMake files and some basic source code. They can be accessed by selecting 'New Project' from the welcome page.</p>
+
+<div align=center><img width=882 src="qrc:/welcome/GetStarted_01.png"></div> 
+
+<p>However, for a quick example of a fully-configured project Studio provides direct access to  SDK examples which are CMake-based. To open one of these examples as a project, select the 'SDK Examples' tab in the welcome screen. If the SDK is already installed on the desktop then you can simply browse to its location. This tab also provides links to download the SDK from the Imagination Technologies website or from GitHub. Once a valid version of the SDK has been found Studio will list the available SDK examples. Select the 'Open Project' link next to any of the examples to open it directly in Studio.</p>
+
+<p>As soon as a project has been opened, the 'Configure Project' dialog will appear. This dialog allows you to select a kit for the project.</p>
+
+<h2 name=#ref03>What is a Kit?</h2>
+
+<p>A kit is an abstract item that conveys every single element required to build, debug and deploy on a certain platform. It contains information about the device (Windows, Linux, Android and so on), the compiler, and the debugger that the platform requires, as well as steps that will define how Studio should deploy the project.</p>
+
+<p>Studio provides a set of pre-defined default kits which can be used when creating a project. Firstly, is the "Desktop" kit which allows you to deploy and run on your local desktop system. The rest of the pre-defined kits are templates. These are not selectable directly, because they do not contain all of the required information. Instead, these templates can be cloned and modified to create kits that are customized for specific deployment devices. Once a kit has been created from a template it is ready to be used with a project. For more information on cloning and modifying kits look at the Studio manual.</p>
+
+<h2 name=#ref04>Creating a kit for Linux</h2>
+<p>Select the 'Options' button from the toolbar and then select 'Devices'. This window contains a list of the devices that have been configured for Studio. By default, there is only 'Local PC (default for Desktop)' in this list which is the desktop machine running Studio.</p>
+<p>To add a new Linux device, select 'Add...', then ' Linux device' and 'Start Wizard'. Set the Host Name, Username and Password and press 'Apply'. To test that the connection works, press the 'Test' button. It should give you a successful message. If this is not the case, check your connection and the setup data.</p>
+
+<h2 name=#ref04>Creating a kit for Android</h2>
+<p>Select the 'Options' button from the toolbar and then select 'Devices'. To add a new Android device, select 'Add...', then '-based Android device' and 'Start Wizard', and finally connect your device through USB. The new device should appear in the list of available devices. Selecting this and clicking 'Apply' will add it to the list of configured devices in Studio. It is important to note that devices are unique, so a new kit must be created for each new device.</p>
+
+<div align=center><img width=756 src="qrc:/welcome/GetStarted_03.png"></div> 
+
+<p>After this, go to the 'Build & Run' section of the 'Options' menu and select the 'Kits' tab. As mentioned before, kits can be created by cloning a pre-existing template. Select the 'Android Arm-64' (' Gen-ARM64') template for the menu and hit 'Clone'. Write a new name for this kit and use the 'Device' dropdown box to select the newly-created Android device. Finally, select 'Apply' to ensure these changes have been saved. This new kit can now be selected from the 'Configure Project' dialog.</p>
+
+<div align=center><img width=959 src="qrc:/welcome/GetStarted_04.png"></div> 
+
+<p>After selecting a kit, hit 'Configure Project'. This will open the project in the Studio.</p>
+
+<h2 name=#ref05>How to build and deploy for desktop and mobile</h2>
+
+<p>You must always have one kit associated with a project, but it's possible change your current kit or add new one at any time. This can be done by selecting the 'Project Config' option () in the toolbar. This dialog has different tabs for the different kits associated with the project. It's also possible to modify how the project will be built from this dialog. This can be done by editing the options within 'Build Settings'. It is important to note that editing the build settings here will change the CMake file associated with the project.</p>
+
+<p>To build your project, select the 'Build' option from the toolbar or hit CTRL+B.</p>
+
+<p>To run and deploy your application, select 'Run' from the toolbar or hit CTRL+R.</p>
+
+<p>On Linux, you might want to deploy extra files required to run your application. To do this got to the Project configuration and select the 'Run" tab. At the top you can find 'Files to deploy' box that will allow you to add files and full folders to the project. If you add a single file, it will be added flat to the /tmp/ folder where the executable resides. If you add a folder (containing files and other folders) the whole structure will be kept in the /tmp/ folder.</p>
+
+<h2 name=#ref06>How to debug the GPU</h2>
+<p>Studio uses a fork of GDB called PVR-GDB as its debugger. This means Studio is able to debug any processor architecture that is natively supported by the GDB implementation while also being able to debug  GPU architecture.</p>
+
+<p>In order to debug the GPU correctly the project must meet a couple of requirements. The project needs to make use of either Vulkan, OpenGL ES, or OpenCL APIs and it needs to have been built with debug symbols. If either of these conditions aren't met then the source code of the programs running on the GPU will not be visible in the debug view.</p>
+
+<p>To start debugging, select one of the available debug modes from the 'Run' option on the toolbar.</p>
+
+<div align=center><img width=368 src="qrc:/welcome/GetStarted_05.png"></div> 
+
+<p>Once your project starts executing on the target device all of the GPU programs that could be scheduled at any point of the execution will become visible (these won't appear until they are loaded by the API). The GPU programs can be identified by an alias that can be included in their associated source code. The source code of any program can be opened double-clicking on it. A breakpoint can be placed at any point in the opened source code, but it is important to note that a breakpoint can only be added at single point across the entire execution of the GPU. The debugger will stop at this breakpoint the next time this program is executed. Once a breakpoint has been hit, Studio will display the interleaved code between the original source code (if available) and the USC (GPU assembly). From the breakpoint it is possible to step through step through the USC code, but not the original source code.</p>
+
+<h2 name=#ref07>How to debug an external application. </h2>
+<p>In order to be able to debug an external application, you need to ensure the application has been built with debug symbols.</p>
+
+<p>To start debugging an external application, open 'Start Debugging' in the 'Debug' menu and then select either 'Start and Debug External Application...' or 'Attach to Unstarted Application...'. The first option starts the application automatically while the second waits until the application is started independently. Selecting either of these options will open a dialog box where a kit and the executable of the external application can be selected. The selected kit should reflect the platform the application to going to be deployed to. In order to launch the debugging process, select 'OK' or 'Start Watching'.</p>
+
+<div align=center><img width=360 src="qrc:/welcome/GetStarted_06.png"></div> 
+
+<div align=center><img width=576 src="qrc:/welcome/GetStarted_07.png"></div> 
+
+</body></html>
