@@ -31,7 +31,8 @@
 int main()
 {
     DOM dom;
-    nanoxml_load_file("..\\..\\example\\test.html", &dom);
+    e_error error = nanoxml_load_file("..\\..\\example\\test.html", &dom);
+    if(error != SUCCESS) exit(EXIT_FAILURE);
 
     CONTENT *c = dom.content_list;
 
@@ -47,4 +48,6 @@ int main()
     }
 
     nanoxml_free_content(&dom);
+
+    exit(EXIT_SUCCESS);
 }

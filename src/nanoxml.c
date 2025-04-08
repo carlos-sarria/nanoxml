@@ -157,6 +157,7 @@ e_error nanoxml_process(DOM *dom)
     int count = 0;
     char *tag_stack[MAX_TAGS];
     int  stack_size = 0;
+    e_error error;
 
     dom->content_list = NULL;
     dom->num_contents = 0;
@@ -172,19 +173,23 @@ e_error nanoxml_process(DOM *dom)
         }
         else {
             e_type t = GET_TYPE(pos);
-            if(t==TAG)  TAG_PUSH(tag_stack, pos, &stack_size);
-            else nanoxml_create_content(dom, pos, tag_stack,stack_size, t);
+            if(t==TAG) {
+                TAG_PUSH(tag_stack, pos, &stack_size);
+            }
+            else {
+               error = nanoxml_create_content(dom, pos, tag_stack,stack_size, t);
+               if(error != SUCCESS) return error;
+            }
         }
 
         pos = strchr(pos, 0x00)+1;
         if(!IS_EMPTY(pos)) {
-            nanoxml_create_content(dom, pos, tag_stack,stack_size, TEXT);
+            error = nanoxml_create_content(dom, pos, tag_stack,stack_size, TEXT);
+            if(error != SUCCESS) return error;
         }
 
         count++;
     }
-
-    // Reverse linked list
 
     return SUCCESS;
 }
@@ -206,14 +211,17 @@ e_error nanoxml_preprocess(DOM *full_DOM)
 /*****************************************************************************/
 /* nanoxml_load_string                                                       */
 /*****************************************************************************/
-e_error nanoxml_load_string(const char *string, DOM *full_DOM)
+e_error nanoxml_load_string(const char *string, DOM *dom)
 {
-    nanoxml_allocate_buffer(strlen(string), full_DOM);
+    e_error error;
 
-    memcpy(full_DOM->buffer, string, full_DOM->buffer_size);
+    nanoxml_allocate_buffer(strlen(string), dom);
 
-    nanoxml_preprocess(full_DOM);
-    nanoxml_process(full_DOM);
+    memcpy(dom->buffer, string, dom->buffer_size);
+
+    nanoxml_preprocess(dom);
+    error = nanoxml_process(dom);
+    if(error != SUCCESS) return error;
 
     return SUCCESS;
 }
@@ -225,6 +233,7 @@ e_error nanoxml_load_file(const char *filename, DOM *full_DOM)
     FILE *file = fopen(filename, "rb");
     if (!file) {
         print_error(ERROR,"%s %s", strerror(errno), filename);
+        return ERR_FILE_NOT_FOUND;
     }
     fseek(file, 0, SEEK_END);
     size_t len = (unsigned long)ftell(file);
@@ -238,7 +247,8 @@ e_error nanoxml_load_file(const char *filename, DOM *full_DOM)
     fclose(file);
 
     nanoxml_preprocess(full_DOM);
-    nanoxml_process(full_DOM);
+    e_error error = nanoxml_process(full_DOM);
+    if(error != SUCCESS) return error;
 
     return SUCCESS;
 }
