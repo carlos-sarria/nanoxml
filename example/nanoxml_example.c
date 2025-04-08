@@ -39,8 +39,9 @@ int main()
 
         printf("TAGS: ");
         for(int i=0; i<c->num_tags; i++) printf("[%s] ", c->tags[i]);
-        if(c->is_unique_tag)  printf("\n UNIQUE TAG: %s\n", c->content);
-        else                  printf("\n CONTENT: %s\n", c->content);
+        if(c->type == UNIQUE_TAG)   printf("\n UNIQUE TAG: %s\n", c->content);
+        else if(c->type == COMMENT) printf("\n COMMENT: %s\n", c->content);
+        else                        printf("\n CONTENT: %s\n", c->content);
 
         c = (CONTENT *)c->prev_node;
     }

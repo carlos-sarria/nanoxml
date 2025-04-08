@@ -49,23 +49,23 @@ static inline char* TRIM(char *s)
     return (s+len);
 }
 
-static inline bool IS_UNIQUE(char *s)
+static inline e_type GET_TYPE(char *s)
 {
     int tag = 0;
     char trimmed[128];
 
     if(s[strlen(s)-1] == '/') return true;
 
-    if(s[0]=='!') return true; // HTML comment
+    if(s[0]=='!') return COMMENT; // HTML comment
 
     sscanf(s, "%[^ ]", &trimmed); /* Only until space. Ignore payload. */
 
     while(unique_tags[tag]) {
-        if (strcmp(unique_tags[tag], trimmed)==0) return true;
+        if (strcmp(unique_tags[tag], trimmed)==0) return UNIQUE_TAG;
         tag++;
     }
 
-    return false;
+    return TAG;
 }
 
 static inline void TAG_PUSH(char **stack, char *str, int *size)
@@ -107,18 +107,31 @@ e_error nanoxml_allocate_buffer(size_t len, DOM *full_DOM)
 /*****************************************************************************/
 /* nanoxml_create_content                                                    */
 /*****************************************************************************/
-e_error nanoxml_create_content(DOM *dom, char *str, char **tag_stack, int  stack_size, bool is_unique_tag)
+e_error nanoxml_create_content(DOM *dom, char *str, char **tag_stack, int  stack_size, e_type type)
 {
+    static CONTENT *temp_prev = NULL;
+
     CONTENT *content = (CONTENT *)malloc(sizeof(CONTENT));
+    if(content==NULL) return ERR_OUT_OF_MEMORY;
+
     content->tags = (char **)malloc(sizeof(char *)*stack_size);
+    if(content->tags==NULL) return ERR_OUT_OF_MEMORY;
+
     memcpy(content->tags, tag_stack, sizeof(char *)*stack_size);
     content->num_tags = stack_size;
     content->content = str;
-    content->is_unique_tag = is_unique_tag;
+    content->type = type;
+    content->prev_node = NULL;
 
-    content->prev_node = (void *)dom->content_list;
-    dom->content_list = content;
+    if(dom->content_list==NULL) dom->content_list = content; // start of linked list
+
+    if(temp_prev) temp_prev->prev_node = content; // linked list (reversed)
+
+    temp_prev = content;
+
     dom->num_contents++;
+
+    return SUCCESS;
 }
 
 /*****************************************************************************/
@@ -158,17 +171,20 @@ e_error nanoxml_process(DOM *dom)
             TAG_POP(tag_stack, pos+1, &stack_size);
         }
         else {
-            if(!IS_UNIQUE(pos))  TAG_PUSH(tag_stack, pos, &stack_size);
-            else nanoxml_create_content(dom, pos, tag_stack,stack_size, true);
+            e_type t = GET_TYPE(pos);
+            if(t==TAG)  TAG_PUSH(tag_stack, pos, &stack_size);
+            else nanoxml_create_content(dom, pos, tag_stack,stack_size, t);
         }
 
         pos = strchr(pos, 0x00)+1;
         if(!IS_EMPTY(pos)) {
-            nanoxml_create_content(dom, pos, tag_stack,stack_size, false);
+            nanoxml_create_content(dom, pos, tag_stack,stack_size, TEXT);
         }
 
         count++;
     }
+
+    // Reverse linked list
 
     return SUCCESS;
 }

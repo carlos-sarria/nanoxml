@@ -35,12 +35,19 @@
 
 #define MAX_TAGS 128
 
+typedef enum {
+    TAG,
+    TEXT,
+    UNIQUE_TAG,
+    COMMENT,
+} e_type;
+
 typedef struct {
     char **tags;
     int num_tags;
     char *content;
     void *prev_node;
-    bool is_unique_tag;
+    e_type type;
 } CONTENT;
 
 typedef struct {
@@ -49,6 +56,7 @@ typedef struct {
     char *buffer;
     size_t buffer_size;
 } DOM;
+
 
 e_error nanoxml_load_string (const char *string, DOM *full_DOM);
 e_error nanoxml_load_file   (const char *filename, DOM *full_DOM);
