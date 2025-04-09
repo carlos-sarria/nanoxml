@@ -13,8 +13,8 @@ include_directories(src)
 add_library(nanoxml STATIC                                                                                                            
         src/nanoxml.c
         src/nanoxml.h
-        src/error.h
-        src/error.c
+
+
 )
 
 ################################
